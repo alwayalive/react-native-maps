@@ -1,9 +1,9 @@
 //
-//  AIRUrlTileOverlay.h
+//  AIRMapLocalTile.h
 //  AirMaps
 //
-//  Created by cascadian on 3/19/16.
-//  Copyright © 2016. All rights reserved.
+//  Created by Peter Zavadsky on 01/12/2017.
+//  Copyright © 2017 Christopher. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -16,16 +16,15 @@
 #import "AIRMap.h"
 #import "RCTConvert+AirMap.h"
 
-@interface AIRMapUrlTile : MKAnnotationView <MKOverlay>
+@interface AIRMapLocalTile : MKAnnotationView <MKOverlay>
 
 @property (nonatomic, weak) AIRMap *map;
 
 @property (nonatomic, strong) MKTileOverlay *tileOverlay;
 @property (nonatomic, strong) MKTileOverlayRenderer *renderer;
 
-//@property (nonatomic,copy) RCTDirectEventBlock onUrlTemplate;
-@property (nonatomic, copy) NSString *urlTemplate;
-@property NSInteger maximumZ;
+@property (nonatomic, copy) NSString *pathTemplate;
+@property (nonatomic, assign) CGFloat tileSize;
 
 #pragma mark MKOverlay protocol
 

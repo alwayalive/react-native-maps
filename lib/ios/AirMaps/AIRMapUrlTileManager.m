@@ -31,7 +31,8 @@ RCT_EXPORT_MODULE()
     AIRMapUrlTile *tile = [AIRMapUrlTile new];
     return tile;
 }
-
+//RCT_EXPORT_VIEW_PROPERTY(onUrlTemplate, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(urlTemplate, NSString)
+RCT_EXPORT_VIEW_PROPERTY(maximumZ, NSInteger)
 
 @end

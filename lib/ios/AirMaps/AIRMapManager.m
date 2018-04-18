@@ -23,6 +23,7 @@
 #import "AIRMapCircle.h"
 #import "SMCalloutView.h"
 #import "AIRMapUrlTile.h"
+#import "AIRMapLocalTile.h"
 #import "AIRMapSnapshot.h"
 #import "RCTConvert+AirMap.h"
 
@@ -36,7 +37,7 @@ static NSString *const RCTMapViewKey = @"MapView";
 @end
 
 @implementation AIRMapManager
-
+  
 RCT_EXPORT_MODULE()
 
 - (UIView *)view
@@ -160,6 +161,48 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
             }];
         }
     }];
+}
+
+RCT_EXPORT_METHOD(animateToViewingAngle:(nonnull NSNumber *)reactTag
+                  withAngle:(double)angle
+                  withDuration:(CGFloat)duration)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+      id view = viewRegistry[reactTag];
+      if (![view isKindOfClass:[AIRMap class]]) {
+          RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+      } else {
+          AIRMap *mapView = (AIRMap *)view;
+
+          MKMapCamera *mapCamera = [[mapView camera] copy];
+          [mapCamera setPitch:angle];
+
+          [AIRMap animateWithDuration:duration/1000 animations:^{
+              [mapView setCamera:mapCamera animated:YES];
+          }];
+      }
+  }];
+}
+
+RCT_EXPORT_METHOD(animateToBearing:(nonnull NSNumber *)reactTag
+                  withBearing:(CGFloat)bearing
+                  withDuration:(CGFloat)duration)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+      id view = viewRegistry[reactTag];
+      if (![view isKindOfClass:[AIRMap class]]) {
+          RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+      } else {
+          AIRMap *mapView = (AIRMap *)view;
+
+          MKMapCamera *mapCamera = [[mapView camera] copy];
+          [mapCamera setHeading:bearing];
+
+          [AIRMap animateWithDuration:duration/1000 animations:^{
+              [mapView setCamera:mapCamera animated:YES];
+          }];
+      }
+  }];
 }
 
 RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
@@ -492,6 +535,8 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)reactTag
         return ((AIRMapCircle *)overlay).renderer;
     } else if ([overlay isKindOfClass:[AIRMapUrlTile class]]) {
         return ((AIRMapUrlTile *)overlay).renderer;
+    } else if ([overlay isKindOfClass:[AIRMapLocalTile class]]) {
+        return ((AIRMapLocalTile *)overlay).renderer;
     } else if([overlay isKindOfClass:[MKTileOverlay class]]) {
         return [[MKTileOverlayRenderer alloc] initWithTileOverlay:overlay];
     } else {
@@ -666,7 +711,10 @@ static int kDragCenterContext;
 
 - (void)mapViewWillStartRenderingMap:(AIRMap *)mapView
 {
-    mapView.hasStartedRendering = YES;
+    if (!mapView.hasStartedRendering) {
+      mapView.onMapReady(@{}); 
+      mapView.hasStartedRendering = YES;
+    }
     [mapView beginLoading];
     [self _emitRegionChangeEvent:mapView continuous:NO];
 }
@@ -674,9 +722,6 @@ static int kDragCenterContext;
 - (void)mapViewDidFinishRenderingMap:(AIRMap *)mapView fullyRendered:(BOOL)fullyRendered
 {
     [mapView finishLoading];
-    [mapView cacheViewIfNeeded];
-
-    mapView.onMapReady(@{});
 }
 
 #pragma mark Private
